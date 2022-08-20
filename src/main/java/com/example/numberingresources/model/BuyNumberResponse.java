@@ -15,4 +15,6 @@ public class BuyNumberResponse {
     private Integer max;
     private List<Integer> numberList;
     private String message;
+    private String accessToken;
+    private String refreshToken;
 }

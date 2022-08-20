@@ -5,10 +5,7 @@ import com.example.numberingresources.model.BuyNumberResponse;
 import com.example.numberingresources.model.NumberRecord;
 import com.example.numberingresources.service.NumberService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
@@ -23,7 +20,11 @@ public class BuyNumberController {
     Map<String,Integer> soldNumbers = new HashMap<>();
 
     @PostMapping("/buy")
-    public BuyNumberResponse buy(@RequestBody BuyNumberRequest buyNumberRequest){
+    public BuyNumberResponse buy(@RequestBody BuyNumberRequest buyNumberRequest, @RequestHeader("Authorization") String auth){
+        if(auth == null || auth.length()==0 || !auth.startsWith("Bearer "))
+            return BuyNumberResponse.builder().message("Invalid Request").build();
+        String jwt = auth.substring(7);
+        //todo validate token
         String code = buyNumberRequest.getAreaCode()+buyNumberRequest.getAccessCode();
         int min = buyNumberRequest.getMin();
         int max = buyNumberRequest.getMax();
@@ -49,12 +50,17 @@ public class BuyNumberController {
         int total = numberService.getNumberRecord(code).getTotal();
         numberService.getNumberRecord(code).setTotal(total-qty);
 
+        //generate access token and refresh token from jwt
+        String accessToken = "cdxkjoprjbhsfseuijncegsdfee";
+        String refreshToken = "jj98yuoiucne9uy9877su7hg4o";
         //build our response
         BuyNumberResponse buyNumberResponse = BuyNumberResponse.builder()
                 .areaCode(buyNumberRequest.getAreaCode())
                 .accessCode(buyNumberRequest.getAccessCode())
                 .quantity(qty).min(min).max(max)
-                .numberList(numbersToSell).message("Success").build();
+                .numberList(numbersToSell)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken).message("Success").build();
 
         return buyNumberResponse;
     }
